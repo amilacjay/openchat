@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut
 } from 'firebase/auth';
+import { getDatabase, ref, onValue, set, push, serverTimestamp } from 'firebase/database';
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6nTe3sipjXq2xGN7sz8KS71E9aQxpLUg",
@@ -23,6 +24,48 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 const googleProvider = new GoogleAuthProvider();
+
+const database = getDatabase(app);
+
+// Update user status
+export const updateUserStatus = (userId, isOnline) => {
+  const userStatusRef = ref(database, `users/${userId}`);
+  set(userStatusRef, {
+    email: auth.currentUser.email,
+    online: isOnline,
+    lastSeen: serverTimestamp()
+  });
+};
+
+// Get all users
+export const subscribeToUsers = (callback) => {
+  const usersRef = ref(database, 'users');
+  return onValue(usersRef, (snapshot) => {
+    const users = snapshot.val() || {};
+    callback(users);
+  });
+};
+
+// Send private message
+export const sendPrivateMessage = async (senderId, receiverId, message) => {
+  const chatId = [senderId, receiverId].sort().join('_');
+  const messagesRef = ref(database, `private_messages/${chatId}`);
+  await push(messagesRef, {
+    senderId,
+    message,
+    timestamp: serverTimestamp()
+  });
+};
+
+// Subscribe to private messages
+export const subscribeToPrivateMessages = (senderId, receiverId, callback) => {
+  const chatId = [senderId, receiverId].sort().join('_');
+  const messagesRef = ref(database, `private_messages/${chatId}`);
+  return onValue(messagesRef, (snapshot) => {
+    const messages = snapshot.val() || {};
+    callback(messages);
+  });
+};
 
 export const signInWithGoogle = async () => {
   try {

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { signInWithGoogle, auth, signInWithEmailPassword, createUserWithEmailPassword, signOut } from "./firebase-config";
+import { signInWithGoogle, auth, signInWithEmailPassword, createUserWithEmailPassword, signOut, updateUserStatus, subscribeToUsers, sendPrivateMessage, subscribeToPrivateMessages } from "./firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
 import styled from "styled-components";
 
 const App = () => {
   const [user, setUser] = useState(null);
+  const [users, setUsers] = useState({});
+  const [selectedUser, setSelectedUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [email, setEmail] = useState("");
@@ -13,22 +15,52 @@ const App = () => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+      if (user) {
+        setUser(user);
+        updateUserStatus(user.uid, true);
+        // Set offline status when user closes tab/window
+        window.addEventListener('beforeunload', () => {
+          updateUserStatus(user.uid, false);
+        });
+      } else {
+        setUser(null);
+        setSelectedUser(null);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (user) {
+        updateUserStatus(user.uid, false);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToUsers((users) => {
+      setUsers(users);
     });
     return () => unsubscribe();
   }, []);
 
-  const handleSendMessage = (e) => {
+  useEffect(() => {
+    if (user && selectedUser) {
+      const unsubscribe = subscribeToPrivateMessages(
+        user.uid,
+        selectedUser.uid,
+        (messages) => {
+          setMessages(Object.values(messages || {}));
+        }
+      );
+      return () => unsubscribe();
+    }
+  }, [user, selectedUser]);
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !selectedUser) return;
 
-    const messageData = {
-      text: newMessage,
-      sender: user.email,
-      timestamp: new Date().toISOString(),
-    };
-
-    setMessages([...messages, messageData]);
+    await sendPrivateMessage(user.uid, selectedUser.uid, newMessage);
     setNewMessage("");
   };
 
@@ -88,29 +120,64 @@ const App = () => {
           <LogoutButton onClick={signOut}>Logout</LogoutButton>
         </UserInfo>
       </Header>
-      <ChatContainer>
-        <MessageList>
-          {messages.map((message, index) => (
-            <MessageItem key={index} isOwnMessage={message.sender === user.email}>
-              <MessageContent isOwnMessage={message.sender === user.email}>
-                <SenderName>{message.sender}</SenderName>
-                <MessageText>{message.text}</MessageText>
-                <MessageTime>
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </MessageTime>
-              </MessageContent>
-            </MessageItem>
-          ))}
-        </MessageList>
-        <MessageForm onSubmit={handleSendMessage}>
-          <MessageInput
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-          />
-          <SendButton type="submit">Send</SendButton>
-        </MessageForm>
-      </ChatContainer>
+      <ChatLayout>
+        <UsersList>
+          <UsersHeader>Online Users</UsersHeader>
+          {Object.entries(users)
+            .filter(([uid]) => uid !== user.uid)
+            .map(([uid, userData]) => (
+              <UserItem
+                key={uid}
+                onClick={() => setSelectedUser({ uid, ...userData })}
+                isSelected={selectedUser?.uid === uid}
+                isOnline={userData.online}
+              >
+                <UserEmail>{userData.email}</UserEmail>
+                <UserStatus isOnline={userData.online}>
+                  {userData.online ? "Online" : "Offline"}
+                </UserStatus>
+              </UserItem>
+            ))}
+        </UsersList>
+        
+        {selectedUser ? (
+          <ChatContainer>
+            <ChatHeader>
+              <span>{selectedUser.email}</span>
+              <UserStatus isOnline={selectedUser.online}>
+                {selectedUser.online ? "Online" : "Offline"}
+              </UserStatus>
+            </ChatHeader>
+            <MessageList>
+              {messages.map((message, index) => (
+                <MessageItem
+                  key={index}
+                  isOwnMessage={message.senderId === user.uid}
+                >
+                  <MessageContent isOwnMessage={message.senderId === user.uid}>
+                    <MessageText>{message.message}</MessageText>
+                    <MessageTime>
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </MessageTime>
+                  </MessageContent>
+                </MessageItem>
+              ))}
+            </MessageList>
+            <MessageForm onSubmit={handleSendMessage}>
+              <MessageInput
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder={`Message ${selectedUser.email}...`}
+              />
+              <SendButton type="submit">Send</SendButton>
+            </MessageForm>
+          </ChatContainer>
+        ) : (
+          <SelectUserPrompt>
+            Select a user to start chatting
+          </SelectUserPrompt>
+        )}
+      </ChatLayout>
     </Container>
   );
 };
@@ -151,6 +218,49 @@ const LogoutButton = styled.button`
   }
 `;
 
+const ChatLayout = styled.div`
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+  padding: 1rem;
+  height: calc(100vh - 64px);
+`;
+
+const UsersList = styled.div`
+  width: 300px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+`;
+
+const UsersHeader = styled.div`
+  padding: 1rem;
+  font-weight: bold;
+  border-bottom: 1px solid #eee;
+`;
+
+const UserItem = styled.div`
+  padding: 1rem;
+  cursor: pointer;
+  background: ${props => props.isSelected ? '#f0f7ff' : 'white'};
+  border-left: 4px solid ${props => props.isSelected ? '#2196f3' : 'transparent'};
+  
+  &:hover {
+    background: #f5f5f5;
+  }
+`;
+
+const UserEmail = styled.div`
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+`;
+
+const UserStatus = styled.div`
+  font-size: 0.8rem;
+  color: ${props => props.isOnline ? '#4caf50' : '#757575'};
+`;
+
 const ChatContainer = styled.div`
   flex: 1;
   display: flex;
@@ -159,6 +269,16 @@ const ChatContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+`;
+
+const ChatHeader = styled.div`
+  padding: 1rem;
+  background: white;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `;
 
 const MessageList = styled.div`
@@ -182,12 +302,6 @@ const MessageContent = styled.div`
   border-radius: 12px;
   max-width: 70%;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-`;
-
-const SenderName = styled.div`
-  font-size: 0.8rem;
-  margin-bottom: 0.3rem;
-  opacity: 0.7;
 `;
 
 const MessageText = styled.div`
@@ -317,6 +431,15 @@ const ToggleAuth = styled.button`
   &:hover {
     text-decoration: underline;
   }
+`;
+
+const SelectUserPrompt = styled.div`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #757575;
 `;
 
 export default App;
