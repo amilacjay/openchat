@@ -1,30 +1,7 @@
 import React, { useState, useEffect } from "react";
+import styled from "styled-components";
 import { signInWithGoogle, auth, signInWithEmailPassword, createUserWithEmailPassword, signOut, updateUserStatus, subscribeToUsers, sendPrivateMessage, subscribeToPrivateMessages } from "./firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
-import styled from "styled-components";
-
-const theme = {
-  dark: {
-    primary: '#1E1F24',
-    secondary: '#1A1B1F',
-    border: '#2D2E34',
-    text: '#FFFFFF',
-    textSecondary: '#8E8E8E',
-    accent: '#2196F3',
-    inputBg: '#2D2E34',
-    inputHover: '#363840'
-  },
-  light: {
-    primary: '#FFFFFF',
-    secondary: '#F8F9FA',
-    border: '#E9ECEF',
-    text: '#212529',
-    textSecondary: '#6C757D',
-    accent: '#2196F3',
-    inputBg: '#F1F3F5',
-    inputHover: '#E9ECEF'
-  }
-};
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -36,6 +13,7 @@ const App = () => {
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [isDarkTheme, setIsDarkTheme] = useState(true);
+  
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -104,9 +82,9 @@ const App = () => {
 
   if (!user) {
     return (
-      <AuthContainer isDark={isDarkTheme}>
-        <AuthBox isDark={isDarkTheme}>
-          <h1>Welcome to Open Chat</h1>
+      <AuthContainer>
+        <AuthBox>
+          <h1>Simple Chat</h1>
           <AuthForm onSubmit={handleAuth}>
             <input
               type="email"
@@ -120,13 +98,13 @@ const App = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <AuthButton type="submit">
+            <button type="submit">
               {isLogin ? "Login" : "Sign Up"}
-            </AuthButton>
+            </button>
           </AuthForm>
-          <ToggleAuth onClick={() => setIsLogin(!isLogin)}>
+          <ToggleText onClick={() => setIsLogin(!isLogin)}>
             {isLogin ? "Need an account? Sign Up" : "Already have an account? Login"}
-          </ToggleAuth>
+          </ToggleText>
           <GoogleButton onClick={signInWithGoogle}>
             Continue with Google
           </GoogleButton>
@@ -136,376 +114,402 @@ const App = () => {
   }
 
   return (
-    <Container isDark={isDarkTheme}>
-      <Sidebar>
-        <Logo>Open Chat</Logo>
-        <SearchBar>
-          <SearchInput placeholder="Search user or chat" />
-        </SearchBar>
-        <UsersList>
-          {Object.entries(users)
-            .filter(([uid]) => uid !== user.uid)
-            .map(([uid, userData]) => (
-              <UserItem
-                key={uid}
-                onClick={() => setSelectedUser({ uid, ...userData })}
-                isSelected={selectedUser?.uid === uid}
-              >
-                <UserAvatar online={userData.online}>
-                  {userData.email[0].toUpperCase()}
-                </UserAvatar>
-                <UserInfo>
-                  <UserName>{userData.email}</UserName>
-                  <LastMessage>
-                    {userData.online ? 'Online' : 'Offline'}
-                  </LastMessage>
-                </UserInfo>
-              </UserItem>
-            ))}
-        </UsersList>
-      </Sidebar>
+    <Container>
+      <AppWrapper>
+        <Sidebar>
+          <SidebarHeader>
+            <AppTitle>Simple Chat</AppTitle>
+            <MenuButton>☰</MenuButton>
+          </SidebarHeader>
+          
+          <SearchContainer>
+            <SearchInput
+              type="text"
+              placeholder="Search chats..."
+            />
+          </SearchContainer>
 
-      <ChatArea>
-        {selectedUser ? (
-          <>
-            <ChatContainer isDark={isDarkTheme}>
+          <ChatList>
+            {Object.entries(users)
+              .filter(([uid]) => uid !== user.uid)
+              .map(([uid, userData]) => (
+                <ChatItem
+                  key={uid}
+                  onClick={() => setSelectedUser({ uid, ...userData })}
+                  active={selectedUser?.uid === uid}
+                >
+                  <Avatar online={userData.online}>
+                    {userData.email[0].toUpperCase()}
+                  </Avatar>
+                  <ChatInfo>
+                    <ChatName>{userData.email}</ChatName>
+                    <LastMessage>Click to start chatting</LastMessage>
+                  </ChatInfo>
+                </ChatItem>
+              ))}
+          </ChatList>
+        </Sidebar>
+
+        <ChatArea>
+          {selectedUser ? (
+            <>
               <ChatHeader>
-                <ChatTitle>
-                  <UserAvatar online={selectedUser.online}>
+                <HeaderLeft>
+                  <Avatar online={selectedUser.online}>
                     {selectedUser.email[0].toUpperCase()}
-                  </UserAvatar>
-                  <h2>{selectedUser.email}</h2>
-                </ChatTitle>
+                  </Avatar>
+                  <div>
+                    <HeaderName>{selectedUser.email}</HeaderName>
+                    <HeaderStatus>{selectedUser.online ? 'Online' : 'Offline'}</HeaderStatus>
+                  </div>
+                </HeaderLeft>
                 <HeaderActions>
-                  <IconButton onClick={() => setIsDarkTheme(!isDarkTheme)}>
-                    {isDarkTheme ? '☀️' : '🌙'}
-                  </IconButton>
-                  <IconButton>📞</IconButton>
-                  <IconButton>⚙️</IconButton>
+                  <ActionButton>📞</ActionButton>
+                  <ActionButton>📹</ActionButton>
                 </HeaderActions>
               </ChatHeader>
-              
-              <MessageList>
-                {messages.map((message, index) => (
-                  <MessageItem
-                    key={index}
-                    isOwnMessage={message.senderId === user.uid}
-                  >
-                    <MessageContent isOwnMessage={message.senderId === user.uid}>
-                      <MessageText>{message.message}</MessageText>
-                      <MessageTime isOwnMessage={message.senderId === user.uid}>
-                        {new Date(message.timestamp).toLocaleTimeString()}
-                      </MessageTime>
-                    </MessageContent>
-                  </MessageItem>
-                ))}
-              </MessageList>
+
+              <MessageArea>
+                {messages.map((message, index) => {
+                  const isOwn = message.senderId === user.uid;
+                  return (
+                    <MessageWrapper key={index} isOwn={isOwn}>
+                      {!isOwn && (
+                        <Avatar small online={selectedUser.online}>
+                          {selectedUser.email[0].toUpperCase()}
+                        </Avatar>
+                      )}
+                      <MessageContent isOwn={isOwn}>
+                        <MessageText>{message.message}</MessageText>
+                        <MessageTime>
+                          {new Date(message.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </MessageTime>
+                      </MessageContent>
+                      {isOwn && (
+                        <Avatar small>
+                          {user.email[0].toUpperCase()}
+                        </Avatar>
+                      )}
+                    </MessageWrapper>
+                  );
+                })}
+              </MessageArea>
 
               <MessageForm onSubmit={handleSendMessage}>
-                <IconButton type="button">
-                  😊
-                </IconButton>
-                <MessageInputWrapper>
-                  <MessageInput
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type a message..."
-                  />
-                  <IconButton type="button">
-                    📎
-                  </IconButton>
-                  <IconButton type="button">
-                    🎤
-                  </IconButton>
-                </MessageInputWrapper>
-                <IconButton type="submit" style={{ color: '#2196F3' }}>
-                  ➤
-                </IconButton>
+                <MessageInput
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type something..."
+                />
+                <SendButton type="submit">Send</SendButton>
               </MessageForm>
-            </ChatContainer>
-            <DetailPanel isDark={isDarkTheme}>
-              <h3>Chat Details</h3>
-              {/* Add chat details content here */}
-            </DetailPanel>
-          </>
-        ) : (
-          <ChatContainer isDark={isDarkTheme}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              height: '100%',
-              color: theme[isDarkTheme ? 'dark' : 'light'].textSecondary 
-            }}>
-              Select a user to start chatting
-            </div>
-          </ChatContainer>
-        )}
-      </ChatArea>
+            </>
+          ) : (
+            <EmptyState>Select a chat to start messaging</EmptyState>
+          )}
+        </ChatArea>
+      </AppWrapper>
     </Container>
   );
 };
 
-// Styled Components
+// Styled Components with Frosted Glass Theme
 const Container = styled.div`
-  height: 100vh;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #ef4444 100%);
+  padding: 1.5rem;
+`;
+
+const AppWrapper = styled.div`
+  max-width: 1200px;
+  height: calc(100vh - 3rem);
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].primary};
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 `;
 
 const Sidebar = styled.div`
-  width: 280px;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
-  border-right: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
+  width: 320px;
+  background: rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
   display: flex;
   flex-direction: column;
 `;
 
-const Logo = styled.div`
-  padding: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
-  border-bottom: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
+const SidebarHeader = styled.div`
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 `;
 
-const SearchBar = styled.div`
-  padding: 12px;
-  border-bottom: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
+const AppTitle = styled.h1`
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+`;
+
+const SearchContainer = styled.div`
+  padding: 1rem;
+  backdrop-filter: blur(10px);
 `;
 
 const SearchInput = styled.input`
   width: 100%;
-  padding: 8px 12px;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].inputBg};
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  border-radius: 6px;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
-  font-size: 14px;
-  
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 0.875rem;
+
   &::placeholder {
-    color: ${props => theme[props.isDark ? 'dark' : 'light'].textSecondary};
+    color: rgba(255, 255, 255, 0.5);
   }
-  
+
   &:focus {
     outline: none;
-    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].inputHover};
+    background: rgba(255, 255, 255, 0.15);
   }
 `;
 
-const UsersList = styled.div`
+const ChatList = styled.div`
   flex: 1;
   overflow-y: auto;
-  
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].border};
-    border-radius: 3px;
-  }
 `;
 
-const UserItem = styled.div`
-  padding: 12px 16px;
-  cursor: pointer;
+const ChatItem = styled.div`
+  padding: 1rem;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: ${props => props.isSelected ? theme[props.isDark ? 'dark' : 'light'].border : 'transparent'};
-  
+  gap: 0.75rem;
+  cursor: pointer;
+  background: ${props => props.active ? 'rgba(255, 255, 255, 0.1)' : 'transparent'};
+  transition: background-color 0.2s;
+
   &:hover {
-    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].border};
+    background: rgba(255, 255, 255, 0.1);
   }
 `;
 
-const UserAvatar = styled.div`
-  width: 40px;
-  height: 40px;
+const Avatar = styled.div`
+  width: ${props => props.small ? '2rem' : '2.5rem'};
+  height: ${props => props.small ? '2rem' : '2.5rem'};
+  background: linear-gradient(135deg, #9f7aea 0%, #e879f9 100%);
   border-radius: 50%;
-  background-color: ${props => props.online ? theme[props.isDark ? 'dark' : 'light'].accent : theme[props.isDark ? 'dark' : 'light'].textSecondary};
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
+  color: white;
+  font-weight: 600;
+  position: relative;
+
+  ${props => props.online && `
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 0.625rem;
+      height: 0.625rem;
+      background-color: #10B981;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+    }
+  `}
 `;
 
-const UserInfo = styled.div`
+const ChatInfo = styled.div`
   flex: 1;
+  min-width: 0;
 `;
 
-const UserName = styled.div`
-  font-size: 14px;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
-  margin-bottom: 4px;
+const ChatName = styled.div`
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
 `;
 
 const LastMessage = styled.div`
-  font-size: 12px;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].textSecondary};
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const ChatArea = styled.div`
   flex: 1;
   display: flex;
-`;
-
-const ChatContainer = styled.div`
-  width: 800px;
-  display: flex;
   flex-direction: column;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].primary};
-  border-right: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
-`;
-
-const DetailPanel = styled.div`
-  flex: 1;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
-  padding: 20px;
 `;
 
 const ChatHeader = styled.div`
-  padding: 16px;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
-  border-bottom: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
+  padding: 1rem;
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 `;
 
-const ChatTitle = styled.div`
+const HeaderLeft = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  
-  h2 {
-    font-size: 16px;
-    font-weight: 500;
-  }
+  gap: 0.75rem;
+`;
+
+const HeaderName = styled.div`
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+`;
+
+const HeaderStatus = styled.div`
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
 `;
 
 const HeaderActions = styled.div`
   display: flex;
-  gap: 16px;
+  gap: 0.75rem;
 `;
 
-const IconButton = styled.button`
+const ActionButton = styled.button`
   background: none;
   border: none;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].textSecondary};
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.25rem;
   cursor: pointer;
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: 20px;
-  
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+
   &:hover {
-    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].inputHover};
+    background: rgba(255, 255, 255, 0.1);
   }
 `;
 
-const MessageList = styled.div`
+const MessageArea = styled.div`
   flex: 1;
-  padding: 20px;
   overflow-y: auto;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].border};
-    border-radius: 3px;
-  }
+  gap: 1rem;
 `;
 
-const MessageItem = styled.div`
+const MessageWrapper = styled.div`
   display: flex;
-  justify-content: ${props => props.isOwnMessage ? 'flex-end' : 'flex-start'};
+  gap: 0.5rem;
+  align-items: flex-end;
+  ${props => props.isOwn && 'flex-direction: row-reverse;'}
 `;
 
 const MessageContent = styled.div`
-  background-color: ${props => props.isOwnMessage 
-    ? props.theme[props.isDark ? 'dark' : 'light'].accent 
-    : props.theme[props.isDark ? 'dark' : 'light'].inputBg};
-  padding: 12px 16px;
-  border-radius: 12px;
   max-width: 70%;
+  background: ${props => props.isOwn ? 'rgba(124, 58, 237, 0.9)' : 'rgba(255, 255, 255, 0.1)'};
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  ${props => props.isOwn ? 'border-bottom-right-radius: 0.25rem;' : 'border-bottom-left-radius: 0.25rem;'}
 `;
 
 const MessageText = styled.div`
-  font-size: 14px;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
 `;
 
 const MessageTime = styled.div`
-  font-size: 12px;
-  color: ${props => props.isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : theme[props.isDark ? 'dark' : 'light'].textSecondary};
-  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
 `;
 
 const MessageForm = styled.form`
-  padding: 16px 24px;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
-  border-top: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
+  padding: 1rem;
   display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const MessageInputWrapper = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].inputBg};
-  border-radius: 24px;
-  padding: 0 16px;
+  gap: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 `;
 
 const MessageInput = styled.input`
   flex: 1;
-  padding: 12px;
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
-  font-size: 14px;
-  
+  border-radius: 1.5rem;
+  padding: 0.75rem 1.25rem;
+  color: white;
+  font-size: 0.875rem;
+
   &::placeholder {
-    color: ${props => theme[props.isDark ? 'dark' : 'light'].textSecondary};
+    color: rgba(255, 255, 255, 0.5);
   }
-  
+
   &:focus {
     outline: none;
+    background: rgba(255, 255, 255, 0.15);
   }
 `;
 
-const AuthContainer = styled.div`
-  height: 100vh;
+const SendButton = styled.button`
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  color: white;
+  border: none;
+  border-radius: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.9;
+  }
+`;
+
+const EmptyState = styled.div`
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].primary};
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+`;
+
+const AuthContainer = styled.div`
+  min-height: 100vh;
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #ef4444 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
 `;
 
 const AuthBox = styled.div`
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
   padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-radius: 1rem;
   width: 100%;
   max-width: 400px;
   text-align: center;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
-  
+  border: 1px solid rgba(255, 255, 255, 0.2);
+
   h1 {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.5rem;
     margin-bottom: 2rem;
   }
 `;
@@ -514,64 +518,87 @@ const AuthForm = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin: 1.5rem 0;
-  
+  margin-bottom: 1rem;
+
   input {
-    padding: 0.8rem;
-    border: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
-    border-radius: 4px;
-    font-size: 1rem;
-    
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.875rem;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
     &:focus {
       outline: none;
-      border-color: ${props => theme[props.isDark ? 'dark' : 'light'].accent};
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  button {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.9;
     }
   }
 `;
 
-const AuthButton = styled.button`
-  padding: 0.8rem;
+const ToggleText = styled.button`
+  background: none;
   border: none;
-  border-radius: 4px;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].accent};
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
-  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.875rem;
   cursor: pointer;
-  
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+
   &:hover {
-    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].accentHover};
+    color: rgba(255, 255, 255, 0.9);
   }
 `;
 
 const GoogleButton = styled.button`
-  padding: 0.8rem;
-  border: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
-  border-radius: 4px;
-  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].primary};
-  font-size: 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
   width: 100%;
-  margin-top: 1rem;
-  
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
   &:hover {
-    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
+    background: rgba(255, 255, 255, 0.15);
   }
 `;
 
-const ToggleAuth = styled.button`
+const MenuButton = styled.button`
   background: none;
   border: none;
-  color: ${props => theme[props.isDark ? 'dark' : 'light'].accent};
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.25rem;
   cursor: pointer;
-  font-size: 0.9rem;
-  
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+
   &:hover {
-    text-decoration: underline;
+    background: rgba(255, 255, 255, 0.1);
   }
 `;
 
