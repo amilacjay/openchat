@@ -12,6 +12,30 @@ const App = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
+
+  const theme = {
+    dark: {
+      primary: '#1E1F24',
+      secondary: '#1A1B1F',
+      border: '#2D2E34',
+      text: '#FFFFFF',
+      textSecondary: '#8E8E8E',
+      accent: '#2196F3',
+      inputBg: '#2D2E34',
+      inputHover: '#363840'
+    },
+    light: {
+      primary: '#FFFFFF',
+      secondary: '#F8F9FA',
+      border: '#E9ECEF',
+      text: '#212529',
+      textSecondary: '#6C757D',
+      accent: '#2196F3',
+      inputBg: '#F1F3F5',
+      inputHover: '#E9ECEF'
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -112,7 +136,7 @@ const App = () => {
   }
 
   return (
-    <Container>
+    <Container isDark={isDarkTheme}>
       <Sidebar>
         <Logo>CONVO</Logo>
         <SearchBar>
@@ -141,59 +165,81 @@ const App = () => {
         </UsersList>
       </Sidebar>
 
-      {selectedUser ? (
-        <ChatContainer>
-          <ChatHeader>
-            <ChatTitle>
-              <UserAvatar online={selectedUser.online}>
-                {selectedUser.email[0].toUpperCase()}
-              </UserAvatar>
-              <h2>{selectedUser.email}</h2>
-            </ChatTitle>
-            <HeaderActions>
-              <IconButton>📞</IconButton>
-              <IconButton>⚙️</IconButton>
-            </HeaderActions>
-          </ChatHeader>
-          
-          <MessageList>
-            {messages.map((message, index) => (
-              <MessageItem
-                key={index}
-                isOwnMessage={message.senderId === user.uid}
-              >
-                <MessageContent isOwnMessage={message.senderId === user.uid}>
-                  <MessageText>{message.message}</MessageText>
-                  <MessageTime isOwnMessage={message.senderId === user.uid}>
-                    {new Date(message.timestamp).toLocaleTimeString()}
-                  </MessageTime>
-                </MessageContent>
-              </MessageItem>
-            ))}
-          </MessageList>
+      <ChatArea>
+        {selectedUser ? (
+          <ChatContainer isDark={isDarkTheme}>
+            <ChatHeader>
+              <ChatTitle>
+                <UserAvatar online={selectedUser.online}>
+                  {selectedUser.email[0].toUpperCase()}
+                </UserAvatar>
+                <h2>{selectedUser.email}</h2>
+              </ChatTitle>
+              <HeaderActions>
+                <IconButton onClick={() => setIsDarkTheme(!isDarkTheme)}>
+                  {isDarkTheme ? '☀️' : '🌙'}
+                </IconButton>
+                <IconButton>📞</IconButton>
+                <IconButton>⚙️</IconButton>
+              </HeaderActions>
+            </ChatHeader>
+            
+            <MessageList>
+              {messages.map((message, index) => (
+                <MessageItem
+                  key={index}
+                  isOwnMessage={message.senderId === user.uid}
+                >
+                  <MessageContent isOwnMessage={message.senderId === user.uid}>
+                    <MessageText>{message.message}</MessageText>
+                    <MessageTime isOwnMessage={message.senderId === user.uid}>
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </MessageTime>
+                  </MessageContent>
+                </MessageItem>
+              ))}
+            </MessageList>
 
-          <MessageForm onSubmit={handleSendMessage}>
-            <MessageInput
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-            />
-            <SendButton type="submit">Send</SendButton>
-          </MessageForm>
-        </ChatContainer>
-      ) : (
-        <ChatContainer>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            height: '100%',
-            color: '#8E8E8E' 
-          }}>
-            Select a user to start chatting
-          </div>
-        </ChatContainer>
-      )}
+            <MessageForm onSubmit={handleSendMessage}>
+              <IconButton type="button">
+                😊
+              </IconButton>
+              <MessageInputWrapper>
+                <MessageInput
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                />
+                <IconButton type="button">
+                  📎
+                </IconButton>
+                <IconButton type="button">
+                  🎤
+                </IconButton>
+              </MessageInputWrapper>
+              <IconButton type="submit" style={{ color: '#2196F3' }}>
+                ➤
+              </IconButton>
+            </MessageForm>
+          </ChatContainer>
+          <DetailPanel isDark={isDarkTheme}>
+            <h3>Chat Details</h3>
+            {/* Add chat details content here */}
+          </DetailPanel>
+        ) : (
+          <ChatContainer isDark={isDarkTheme}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              height: '100%',
+              color: theme[isDarkTheme ? 'dark' : 'light'].textSecondary 
+            }}>
+              Select a user to start chatting
+            </div>
+          </ChatContainer>
+        )}
+      </ChatArea>
     </Container>
   );
 };
@@ -202,14 +248,14 @@ const App = () => {
 const Container = styled.div`
   height: 100vh;
   display: flex;
-  background-color: #1E1F24;
-  color: #FFFFFF;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].primary};
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
 `;
 
 const Sidebar = styled.div`
   width: 280px;
-  background-color: #1A1B1F;
-  border-right: 1px solid #2D2E34;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
+  border-right: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
   display: flex;
   flex-direction: column;
 `;
@@ -218,31 +264,31 @@ const Logo = styled.div`
   padding: 20px;
   font-size: 24px;
   font-weight: bold;
-  color: #FFFFFF;
-  border-bottom: 1px solid #2D2E34;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  border-bottom: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
 `;
 
 const SearchBar = styled.div`
   padding: 12px;
-  border-bottom: 1px solid #2D2E34;
+  border-bottom: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
 `;
 
 const SearchInput = styled.input`
   width: 100%;
   padding: 8px 12px;
-  background-color: #2D2E34;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].inputBg};
   border: none;
   border-radius: 6px;
-  color: #FFFFFF;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
   font-size: 14px;
   
   &::placeholder {
-    color: #8E8E8E;
+    color: ${props => props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
   }
   
   &:focus {
     outline: none;
-    background-color: #363840;
+    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].inputHover};
   }
 `;
 
@@ -255,7 +301,7 @@ const UsersList = styled.div`
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: #2D2E34;
+    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
     border-radius: 3px;
   }
 `;
@@ -266,10 +312,10 @@ const UserItem = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  background: ${props => props.isSelected ? '#2D2E34' : 'transparent'};
+  background: ${props => props.isSelected ? props.theme[props.isDark ? 'dark' : 'light'].border : 'transparent'};
   
   &:hover {
-    background-color: #2D2E34;
+    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
   }
 `;
 
@@ -277,12 +323,12 @@ const UserAvatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: ${props => props.online ? '#4CAF50' : '#757575'};
+  background-color: ${props => props.online ? props.theme[props.isDark ? 'dark' : 'light'].accent : props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  color: white;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
 `;
 
 const UserInfo = styled.div`
@@ -291,26 +337,38 @@ const UserInfo = styled.div`
 
 const UserName = styled.div`
   font-size: 14px;
-  color: #FFFFFF;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
   margin-bottom: 4px;
 `;
 
 const LastMessage = styled.div`
   font-size: 12px;
-  color: #8E8E8E;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
+`;
+
+const ChatArea = styled.div`
+  flex: 1;
+  display: flex;
 `;
 
 const ChatContainer = styled.div`
-  flex: 1;
+  width: 800px;
   display: flex;
   flex-direction: column;
-  background-color: #1E1F24;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].primary};
+  border-right: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+`;
+
+const DetailPanel = styled.div`
+  flex: 1;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
+  padding: 20px;
 `;
 
 const ChatHeader = styled.div`
   padding: 16px;
-  background-color: #1A1B1F;
-  border-bottom: 1px solid #2D2E34;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
+  border-bottom: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -335,13 +393,17 @@ const HeaderActions = styled.div`
 const IconButton = styled.button`
   background: none;
   border: none;
-  color: #8E8E8E;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
   cursor: pointer;
   padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
+  font-size: 20px;
   
   &:hover {
-    background-color: #2D2E34;
+    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].inputHover};
   }
 `;
 
@@ -358,7 +420,7 @@ const MessageList = styled.div`
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: #2D2E34;
+    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
     border-radius: 3px;
   }
 `;
@@ -369,7 +431,9 @@ const MessageItem = styled.div`
 `;
 
 const MessageContent = styled.div`
-  background-color: ${props => props.isOwnMessage ? '#2196F3' : '#2D2E34'};
+  background-color: ${props => props.isOwnMessage 
+    ? props.theme[props.isDark ? 'dark' : 'light'].accent 
+    : props.theme[props.isDark ? 'dark' : 'light'].inputBg};
   padding: 12px 16px;
   border-radius: 12px;
   max-width: 70%;
@@ -377,52 +441,47 @@ const MessageContent = styled.div`
 
 const MessageText = styled.div`
   font-size: 14px;
-  color: #FFFFFF;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
 `;
 
 const MessageTime = styled.div`
   font-size: 12px;
-  color: ${props => props.isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : '#8E8E8E'};
+  color: ${props => props.isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
   margin-top: 4px;
 `;
 
 const MessageForm = styled.form`
-  padding: 16px;
-  background-color: #1A1B1F;
-  border-top: 1px solid #2D2E34;
+  padding: 16px 24px;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
+  border-top: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
   display: flex;
+  align-items: center;
   gap: 12px;
+`;
+
+const MessageInputWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].inputBg};
+  border-radius: 24px;
+  padding: 0 16px;
 `;
 
 const MessageInput = styled.input`
   flex: 1;
-  padding: 12px 16px;
-  background-color: #2D2E34;
+  padding: 12px;
+  background: none;
   border: none;
-  border-radius: 8px;
-  color: #FFFFFF;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
   font-size: 14px;
   
   &::placeholder {
-    color: #8E8E8E;
+    color: ${props => props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
   }
   
   &:focus {
     outline: none;
-    background-color: #363840;
-  }
-`;
-
-const SendButton = styled.button`
-  padding: 12px 24px;
-  background-color: #2196F3;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #1976D2;
   }
 `;
 
@@ -431,18 +490,18 @@ const AuthContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #1E1F24;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].primary};
 `;
 
 const AuthBox = styled.div`
-  background-color: #1A1B1F;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 400px;
   text-align: center;
-  color: #FFFFFF;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
   
   h1 {
     margin-bottom: 2rem;
@@ -457,13 +516,13 @@ const AuthForm = styled.form`
   
   input {
     padding: 0.8rem;
-    border: 1px solid #ddd;
+    border: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
     border-radius: 4px;
     font-size: 1rem;
     
     &:focus {
       outline: none;
-      border-color: #2196f3;
+      border-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].accent};
     }
   }
 `;
@@ -472,22 +531,22 @@ const AuthButton = styled.button`
   padding: 0.8rem;
   border: none;
   border-radius: 4px;
-  background-color: #2196f3;
-  color: white;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].accent};
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
   font-size: 1rem;
   cursor: pointer;
   
   &:hover {
-    background-color: #1976d2;
+    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].accentHover};
   }
 `;
 
 const GoogleButton = styled.button`
   padding: 0.8rem;
-  border: 1px solid #ddd;
+  border: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
   border-radius: 4px;
-  background-color: white;
-  color: #757575;
+  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].primary};
   font-size: 1rem;
   cursor: pointer;
   display: flex;
@@ -498,14 +557,14 @@ const GoogleButton = styled.button`
   margin-top: 1rem;
   
   &:hover {
-    background-color: #f5f5f5;
+    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
   }
 `;
 
 const ToggleAuth = styled.button`
   background: none;
   border: none;
-  color: #2196f3;
+  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].accent};
   cursor: pointer;
   font-size: 0.9rem;
   
