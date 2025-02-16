@@ -3,6 +3,29 @@ import { signInWithGoogle, auth, signInWithEmailPassword, createUserWithEmailPas
 import { onAuthStateChanged } from "firebase/auth";
 import styled from "styled-components";
 
+const theme = {
+  dark: {
+    primary: '#1E1F24',
+    secondary: '#1A1B1F',
+    border: '#2D2E34',
+    text: '#FFFFFF',
+    textSecondary: '#8E8E8E',
+    accent: '#2196F3',
+    inputBg: '#2D2E34',
+    inputHover: '#363840'
+  },
+  light: {
+    primary: '#FFFFFF',
+    secondary: '#F8F9FA',
+    border: '#E9ECEF',
+    text: '#212529',
+    textSecondary: '#6C757D',
+    accent: '#2196F3',
+    inputBg: '#F1F3F5',
+    inputHover: '#E9ECEF'
+  }
+};
+
 const App = () => {
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState({});
@@ -13,29 +36,6 @@ const App = () => {
   const [password, setPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [isDarkTheme, setIsDarkTheme] = useState(true);
-
-  const theme = {
-    dark: {
-      primary: '#1E1F24',
-      secondary: '#1A1B1F',
-      border: '#2D2E34',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E8E',
-      accent: '#2196F3',
-      inputBg: '#2D2E34',
-      inputHover: '#363840'
-    },
-    light: {
-      primary: '#FFFFFF',
-      secondary: '#F8F9FA',
-      border: '#E9ECEF',
-      text: '#212529',
-      textSecondary: '#6C757D',
-      accent: '#2196F3',
-      inputBg: '#F1F3F5',
-      inputHover: '#E9ECEF'
-    }
-  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -104,8 +104,8 @@ const App = () => {
 
   if (!user) {
     return (
-      <AuthContainer>
-        <AuthBox>
+      <AuthContainer isDark={isDarkTheme}>
+        <AuthBox isDark={isDarkTheme}>
           <h1>Welcome to Open Chat</h1>
           <AuthForm onSubmit={handleAuth}>
             <input
@@ -250,14 +250,14 @@ const App = () => {
 const Container = styled.div`
   height: 100vh;
   display: flex;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].primary};
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].primary};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
 `;
 
 const Sidebar = styled.div`
   width: 280px;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
-  border-right: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
+  border-right: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
   display: flex;
   flex-direction: column;
 `;
@@ -266,31 +266,31 @@ const Logo = styled.div`
   padding: 20px;
   font-size: 24px;
   font-weight: bold;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
-  border-bottom: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
+  border-bottom: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
 `;
 
 const SearchBar = styled.div`
   padding: 12px;
-  border-bottom: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+  border-bottom: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
 `;
 
 const SearchInput = styled.input`
   width: 100%;
   padding: 8px 12px;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].inputBg};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].inputBg};
   border: none;
   border-radius: 6px;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
   font-size: 14px;
   
   &::placeholder {
-    color: ${props => props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
+    color: ${props => theme[props.isDark ? 'dark' : 'light'].textSecondary};
   }
   
   &:focus {
     outline: none;
-    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].inputHover};
+    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].inputHover};
   }
 `;
 
@@ -303,7 +303,7 @@ const UsersList = styled.div`
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].border};
     border-radius: 3px;
   }
 `;
@@ -314,10 +314,10 @@ const UserItem = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  background: ${props => props.isSelected ? props.theme[props.isDark ? 'dark' : 'light'].border : 'transparent'};
+  background: ${props => props.isSelected ? theme[props.isDark ? 'dark' : 'light'].border : 'transparent'};
   
   &:hover {
-    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].border};
   }
 `;
 
@@ -325,12 +325,12 @@ const UserAvatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: ${props => props.online ? props.theme[props.isDark ? 'dark' : 'light'].accent : props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
+  background-color: ${props => props.online ? theme[props.isDark ? 'dark' : 'light'].accent : theme[props.isDark ? 'dark' : 'light'].textSecondary};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
 `;
 
 const UserInfo = styled.div`
@@ -339,13 +339,13 @@ const UserInfo = styled.div`
 
 const UserName = styled.div`
   font-size: 14px;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
   margin-bottom: 4px;
 `;
 
 const LastMessage = styled.div`
   font-size: 12px;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].textSecondary};
 `;
 
 const ChatArea = styled.div`
@@ -357,20 +357,20 @@ const ChatContainer = styled.div`
   width: 800px;
   display: flex;
   flex-direction: column;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].primary};
-  border-right: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].primary};
+  border-right: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
 `;
 
 const DetailPanel = styled.div`
   flex: 1;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
   padding: 20px;
 `;
 
 const ChatHeader = styled.div`
   padding: 16px;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
-  border-bottom: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
+  border-bottom: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -395,7 +395,7 @@ const HeaderActions = styled.div`
 const IconButton = styled.button`
   background: none;
   border: none;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].textSecondary};
   cursor: pointer;
   padding: 8px;
   display: flex;
@@ -405,7 +405,7 @@ const IconButton = styled.button`
   font-size: 20px;
   
   &:hover {
-    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].inputHover};
+    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].inputHover};
   }
 `;
 
@@ -422,7 +422,7 @@ const MessageList = styled.div`
   }
   
   &::-webkit-scrollbar-thumb {
-    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].border};
     border-radius: 3px;
   }
 `;
@@ -443,19 +443,19 @@ const MessageContent = styled.div`
 
 const MessageText = styled.div`
   font-size: 14px;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
 `;
 
 const MessageTime = styled.div`
   font-size: 12px;
-  color: ${props => props.isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
+  color: ${props => props.isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : theme[props.isDark ? 'dark' : 'light'].textSecondary};
   margin-top: 4px;
 `;
 
 const MessageForm = styled.form`
   padding: 16px 24px;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
-  border-top: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
+  border-top: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
   display: flex;
   align-items: center;
   gap: 12px;
@@ -465,7 +465,7 @@ const MessageInputWrapper = styled.div`
   flex: 1;
   display: flex;
   align-items: center;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].inputBg};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].inputBg};
   border-radius: 24px;
   padding: 0 16px;
 `;
@@ -475,11 +475,11 @@ const MessageInput = styled.input`
   padding: 12px;
   background: none;
   border: none;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
   font-size: 14px;
   
   &::placeholder {
-    color: ${props => props.theme[props.isDark ? 'dark' : 'light'].textSecondary};
+    color: ${props => theme[props.isDark ? 'dark' : 'light'].textSecondary};
   }
   
   &:focus {
@@ -492,18 +492,18 @@ const AuthContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].primary};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].primary};
 `;
 
 const AuthBox = styled.div`
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].secondary};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].secondary};
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 400px;
   text-align: center;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
   
   h1 {
     margin-bottom: 2rem;
@@ -518,13 +518,13 @@ const AuthForm = styled.form`
   
   input {
     padding: 0.8rem;
-    border: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+    border: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
     border-radius: 4px;
     font-size: 1rem;
     
     &:focus {
       outline: none;
-      border-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].accent};
+      border-color: ${props => theme[props.isDark ? 'dark' : 'light'].accent};
     }
   }
 `;
@@ -533,22 +533,22 @@ const AuthButton = styled.button`
   padding: 0.8rem;
   border: none;
   border-radius: 4px;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].accent};
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].accent};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
   font-size: 1rem;
   cursor: pointer;
   
   &:hover {
-    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].accentHover};
+    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].accentHover};
   }
 `;
 
 const GoogleButton = styled.button`
   padding: 0.8rem;
-  border: 1px solid ${props => props.theme[props.isDark ? 'dark' : 'light'].border};
+  border: 1px solid ${props => theme[props.isDark ? 'dark' : 'light'].border};
   border-radius: 4px;
-  background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].primary};
+  background-color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].primary};
   font-size: 1rem;
   cursor: pointer;
   display: flex;
@@ -559,14 +559,14 @@ const GoogleButton = styled.button`
   margin-top: 1rem;
   
   &:hover {
-    background-color: ${props => props.theme[props.isDark ? 'dark' : 'light'].text};
+    background-color: ${props => theme[props.isDark ? 'dark' : 'light'].text};
   }
 `;
 
 const ToggleAuth = styled.button`
   background: none;
   border: none;
-  color: ${props => props.theme[props.isDark ? 'dark' : 'light'].accent};
+  color: ${props => theme[props.isDark ? 'dark' : 'light'].accent};
   cursor: pointer;
   font-size: 0.9rem;
   
