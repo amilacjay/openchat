@@ -113,16 +113,12 @@ const App = () => {
 
   return (
     <Container>
-      <Header>
-        <h1>ChatApp</h1>
-        <UserInfo>
-          <span>{user.email}</span>
-          <LogoutButton onClick={signOut}>Logout</LogoutButton>
-        </UserInfo>
-      </Header>
-      <ChatLayout>
+      <Sidebar>
+        <Logo>CONVO</Logo>
+        <SearchBar>
+          <SearchInput placeholder="Search user or chat" />
+        </SearchBar>
         <UsersList>
-          <UsersHeader>Online Users</UsersHeader>
           {Object.entries(users)
             .filter(([uid]) => uid !== user.uid)
             .map(([uid, userData]) => (
@@ -130,54 +126,74 @@ const App = () => {
                 key={uid}
                 onClick={() => setSelectedUser({ uid, ...userData })}
                 isSelected={selectedUser?.uid === uid}
-                isOnline={userData.online}
               >
-                <UserEmail>{userData.email}</UserEmail>
-                <UserStatus isOnline={userData.online}>
-                  {userData.online ? "Online" : "Offline"}
-                </UserStatus>
+                <UserAvatar online={userData.online}>
+                  {userData.email[0].toUpperCase()}
+                </UserAvatar>
+                <UserInfo>
+                  <UserName>{userData.email}</UserName>
+                  <LastMessage>
+                    {userData.online ? 'Online' : 'Offline'}
+                  </LastMessage>
+                </UserInfo>
               </UserItem>
             ))}
         </UsersList>
-        
-        {selectedUser ? (
-          <ChatContainer>
-            <ChatHeader>
-              <span>{selectedUser.email}</span>
-              <UserStatus isOnline={selectedUser.online}>
-                {selectedUser.online ? "Online" : "Offline"}
-              </UserStatus>
-            </ChatHeader>
-            <MessageList>
-              {messages.map((message, index) => (
-                <MessageItem
-                  key={index}
-                  isOwnMessage={message.senderId === user.uid}
-                >
-                  <MessageContent isOwnMessage={message.senderId === user.uid}>
-                    <MessageText>{message.message}</MessageText>
-                    <MessageTime>
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </MessageTime>
-                  </MessageContent>
-                </MessageItem>
-              ))}
-            </MessageList>
-            <MessageForm onSubmit={handleSendMessage}>
-              <MessageInput
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder={`Message ${selectedUser.email}...`}
-              />
-              <SendButton type="submit">Send</SendButton>
-            </MessageForm>
-          </ChatContainer>
-        ) : (
-          <SelectUserPrompt>
+      </Sidebar>
+
+      {selectedUser ? (
+        <ChatContainer>
+          <ChatHeader>
+            <ChatTitle>
+              <UserAvatar online={selectedUser.online}>
+                {selectedUser.email[0].toUpperCase()}
+              </UserAvatar>
+              <h2>{selectedUser.email}</h2>
+            </ChatTitle>
+            <HeaderActions>
+              <IconButton>📞</IconButton>
+              <IconButton>⚙️</IconButton>
+            </HeaderActions>
+          </ChatHeader>
+          
+          <MessageList>
+            {messages.map((message, index) => (
+              <MessageItem
+                key={index}
+                isOwnMessage={message.senderId === user.uid}
+              >
+                <MessageContent isOwnMessage={message.senderId === user.uid}>
+                  <MessageText>{message.message}</MessageText>
+                  <MessageTime isOwnMessage={message.senderId === user.uid}>
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </MessageTime>
+                </MessageContent>
+              </MessageItem>
+            ))}
+          </MessageList>
+
+          <MessageForm onSubmit={handleSendMessage}>
+            <MessageInput
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+            />
+            <SendButton type="submit">Send</SendButton>
+          </MessageForm>
+        </ChatContainer>
+      ) : (
+        <ChatContainer>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            height: '100%',
+            color: '#8E8E8E' 
+          }}>
             Select a user to start chatting
-          </SelectUserPrompt>
-        )}
-      </ChatLayout>
+          </div>
+        </ChatContainer>
+      )}
     </Container>
   );
 };
@@ -186,167 +202,227 @@ const App = () => {
 const Container = styled.div`
   height: 100vh;
   display: flex;
+  background-color: #1E1F24;
+  color: #FFFFFF;
+`;
+
+const Sidebar = styled.div`
+  width: 280px;
+  background-color: #1A1B1F;
+  border-right: 1px solid #2D2E34;
+  display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
 `;
 
-const Header = styled.header`
-  background-color: #2196f3;
-  color: white;
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+const Logo = styled.div`
+  padding: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #FFFFFF;
+  border-bottom: 1px solid #2D2E34;
 `;
 
-const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+const SearchBar = styled.div`
+  padding: 12px;
+  border-bottom: 1px solid #2D2E34;
 `;
 
-const LogoutButton = styled.button`
-  padding: 0.5rem 1rem;
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 8px 12px;
+  background-color: #2D2E34;
   border: none;
-  border-radius: 4px;
-  background-color: #1976d2;
-  color: white;
-  cursor: pointer;
+  border-radius: 6px;
+  color: #FFFFFF;
+  font-size: 14px;
   
-  &:hover {
-    background-color: #1565c0;
+  &::placeholder {
+    color: #8E8E8E;
   }
-`;
-
-const ChatLayout = styled.div`
-  display: flex;
-  flex: 1;
-  gap: 1rem;
-  padding: 1rem;
-  height: calc(100vh - 64px);
+  
+  &:focus {
+    outline: none;
+    background-color: #363840;
+  }
 `;
 
 const UsersList = styled.div`
-  width: 300px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex: 1;
   overflow-y: auto;
-`;
-
-const UsersHeader = styled.div`
-  padding: 1rem;
-  font-weight: bold;
-  border-bottom: 1px solid #eee;
-`;
-
-const UserItem = styled.div`
-  padding: 1rem;
-  cursor: pointer;
-  background: ${props => props.isSelected ? '#f0f7ff' : 'white'};
-  border-left: 4px solid ${props => props.isSelected ? '#2196f3' : 'transparent'};
   
-  &:hover {
-    background: #f5f5f5;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: #2D2E34;
+    border-radius: 3px;
   }
 `;
 
-const UserEmail = styled.div`
-  font-size: 0.9rem;
-  margin-bottom: 0.3rem;
+const UserItem = styled.div`
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: ${props => props.isSelected ? '#2D2E34' : 'transparent'};
+  
+  &:hover {
+    background-color: #2D2E34;
+  }
 `;
 
-const UserStatus = styled.div`
-  font-size: 0.8rem;
-  color: ${props => props.isOnline ? '#4caf50' : '#757575'};
+const UserAvatar = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: ${props => props.online ? '#4CAF50' : '#757575'};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: white;
+`;
+
+const UserInfo = styled.div`
+  flex: 1;
+`;
+
+const UserName = styled.div`
+  font-size: 14px;
+  color: #FFFFFF;
+  margin-bottom: 4px;
+`;
+
+const LastMessage = styled.div`
+  font-size: 12px;
+  color: #8E8E8E;
 `;
 
 const ChatContainer = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
+  background-color: #1E1F24;
 `;
 
 const ChatHeader = styled.div`
-  padding: 1rem;
-  background: white;
-  border-radius: 8px 8px 0 0;
+  padding: 16px;
+  background-color: #1A1B1F;
+  border-bottom: 1px solid #2D2E34;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
+`;
+
+const ChatTitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  h2 {
+    font-size: 16px;
+    font-weight: 500;
+  }
+`;
+
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 16px;
+`;
+
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  color: #8E8E8E;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  
+  &:hover {
+    background-color: #2D2E34;
+  }
 `;
 
 const MessageList = styled.div`
   flex: 1;
+  padding: 20px;
   overflow-y: auto;
-  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: #2D2E34;
+    border-radius: 3px;
+  }
 `;
 
 const MessageItem = styled.div`
   display: flex;
-  justify-content: ${props => props.isOwnMessage ? "flex-end" : "flex-start"};
+  justify-content: ${props => props.isOwnMessage ? 'flex-end' : 'flex-start'};
 `;
 
 const MessageContent = styled.div`
-  background-color: ${props => props.isOwnMessage ? "#2196f3" : "white"};
-  color: ${props => props.isOwnMessage ? "white" : "black"};
-  padding: 0.8rem;
+  background-color: ${props => props.isOwnMessage ? '#2196F3' : '#2D2E34'};
+  padding: 12px 16px;
   border-radius: 12px;
   max-width: 70%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `;
 
 const MessageText = styled.div`
-  word-break: break-word;
+  font-size: 14px;
+  color: #FFFFFF;
 `;
 
 const MessageTime = styled.div`
-  font-size: 0.7rem;
-  margin-top: 0.3rem;
-  opacity: 0.7;
-  text-align: right;
+  font-size: 12px;
+  color: ${props => props.isOwnMessage ? 'rgba(255, 255, 255, 0.7)' : '#8E8E8E'};
+  margin-top: 4px;
 `;
 
 const MessageForm = styled.form`
+  padding: 16px;
+  background-color: #1A1B1F;
+  border-top: 1px solid #2D2E34;
   display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  gap: 12px;
 `;
 
 const MessageInput = styled.input`
   flex: 1;
-  padding: 0.8rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 1rem;
+  padding: 12px 16px;
+  background-color: #2D2E34;
+  border: none;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-size: 14px;
+  
+  &::placeholder {
+    color: #8E8E8E;
+  }
   
   &:focus {
     outline: none;
-    border-color: #2196f3;
+    background-color: #363840;
   }
 `;
 
 const SendButton = styled.button`
-  padding: 0.8rem 1.5rem;
+  padding: 12px 24px;
+  background-color: #2196F3;
   border: none;
-  border-radius: 4px;
-  background-color: #2196f3;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   
   &:hover {
-    background-color: #1976d2;
+    background-color: #1976D2;
   }
 `;
 
@@ -355,17 +431,22 @@ const AuthContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f5f5;
+  background-color: #1E1F24;
 `;
 
 const AuthBox = styled.div`
-  background-color: white;
+  background-color: #1A1B1F;
   padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   width: 100%;
   max-width: 400px;
   text-align: center;
+  color: #FFFFFF;
+  
+  h1 {
+    margin-bottom: 2rem;
+  }
 `;
 
 const AuthForm = styled.form`
@@ -431,15 +512,6 @@ const ToggleAuth = styled.button`
   &:hover {
     text-decoration: underline;
   }
-`;
-
-const SelectUserPrompt = styled.div`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  color: #757575;
 `;
 
 export default App;
