@@ -106,7 +106,7 @@ const App = () => {
     return (
       <AuthContainer>
         <AuthBox>
-          <h1>Welcome to ChatApp</h1>
+          <h1>Welcome to Open Chat</h1>
           <AuthForm onSubmit={handleAuth}>
             <input
               type="email"
@@ -138,7 +138,7 @@ const App = () => {
   return (
     <Container isDark={isDarkTheme}>
       <Sidebar>
-        <Logo>CONVO</Logo>
+        <Logo>Open Chat</Logo>
         <SearchBar>
           <SearchInput placeholder="Search user or chat" />
         </SearchBar>
@@ -167,65 +167,67 @@ const App = () => {
 
       <ChatArea>
         {selectedUser ? (
-          <ChatContainer isDark={isDarkTheme}>
-            <ChatHeader>
-              <ChatTitle>
-                <UserAvatar online={selectedUser.online}>
-                  {selectedUser.email[0].toUpperCase()}
-                </UserAvatar>
-                <h2>{selectedUser.email}</h2>
-              </ChatTitle>
-              <HeaderActions>
-                <IconButton onClick={() => setIsDarkTheme(!isDarkTheme)}>
-                  {isDarkTheme ? '☀️' : '🌙'}
-                </IconButton>
-                <IconButton>📞</IconButton>
-                <IconButton>⚙️</IconButton>
-              </HeaderActions>
-            </ChatHeader>
-            
-            <MessageList>
-              {messages.map((message, index) => (
-                <MessageItem
-                  key={index}
-                  isOwnMessage={message.senderId === user.uid}
-                >
-                  <MessageContent isOwnMessage={message.senderId === user.uid}>
-                    <MessageText>{message.message}</MessageText>
-                    <MessageTime isOwnMessage={message.senderId === user.uid}>
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </MessageTime>
-                  </MessageContent>
-                </MessageItem>
-              ))}
-            </MessageList>
+          <>
+            <ChatContainer isDark={isDarkTheme}>
+              <ChatHeader>
+                <ChatTitle>
+                  <UserAvatar online={selectedUser.online}>
+                    {selectedUser.email[0].toUpperCase()}
+                  </UserAvatar>
+                  <h2>{selectedUser.email}</h2>
+                </ChatTitle>
+                <HeaderActions>
+                  <IconButton onClick={() => setIsDarkTheme(!isDarkTheme)}>
+                    {isDarkTheme ? '☀️' : '🌙'}
+                  </IconButton>
+                  <IconButton>📞</IconButton>
+                  <IconButton>⚙️</IconButton>
+                </HeaderActions>
+              </ChatHeader>
+              
+              <MessageList>
+                {messages.map((message, index) => (
+                  <MessageItem
+                    key={index}
+                    isOwnMessage={message.senderId === user.uid}
+                  >
+                    <MessageContent isOwnMessage={message.senderId === user.uid}>
+                      <MessageText>{message.message}</MessageText>
+                      <MessageTime isOwnMessage={message.senderId === user.uid}>
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </MessageTime>
+                    </MessageContent>
+                  </MessageItem>
+                ))}
+              </MessageList>
 
-            <MessageForm onSubmit={handleSendMessage}>
-              <IconButton type="button">
-                😊
-              </IconButton>
-              <MessageInputWrapper>
-                <MessageInput
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                />
+              <MessageForm onSubmit={handleSendMessage}>
                 <IconButton type="button">
-                  📎
+                  😊
                 </IconButton>
-                <IconButton type="button">
-                  🎤
+                <MessageInputWrapper>
+                  <MessageInput
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Type a message..."
+                  />
+                  <IconButton type="button">
+                    📎
+                  </IconButton>
+                  <IconButton type="button">
+                    🎤
+                  </IconButton>
+                </MessageInputWrapper>
+                <IconButton type="submit" style={{ color: '#2196F3' }}>
+                  ➤
                 </IconButton>
-              </MessageInputWrapper>
-              <IconButton type="submit" style={{ color: '#2196F3' }}>
-                ➤
-              </IconButton>
-            </MessageForm>
-          </ChatContainer>
-          <DetailPanel isDark={isDarkTheme}>
-            <h3>Chat Details</h3>
-            {/* Add chat details content here */}
-          </DetailPanel>
+              </MessageForm>
+            </ChatContainer>
+            <DetailPanel isDark={isDarkTheme}>
+              <h3>Chat Details</h3>
+              {/* Add chat details content here */}
+            </DetailPanel>
+          </>
         ) : (
           <ChatContainer isDark={isDarkTheme}>
             <div style={{ 
